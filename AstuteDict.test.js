@@ -1,81 +1,66 @@
-const Dict = require('./AstuteDict')
+const Dict = require('./AstuteDict');
 
-test('Should get key without variables', () => {
-  const d = Dict({'/about': 'foo'})
+const $in = dict => {
+  const self = {};
+  self.get = aKey => ({
+    returns: expected => {
+      test(`'${aKey}' in ${JSON.stringify(dict)} should return ${JSON.stringify(expected)}`, () => {
+        expect(Dict(dict).get(aKey)).toEqual(expected)
+      });
+      return self;
+    }
+  });
+  return self;
+}
 
-  expect(d.get('/about')).toEqual({value: 'foo', variables: {}})
+$in({'bar': 'foo'}).get('foo').returns({value: undefined, variables: {}});
+
+$in({'/about': 'foo'}).get('/about').returns({value: 'foo', variables: {}});
+
+$in({'/foo/*/bar': 'baz'}).get('/foo/wow/bar').returns({value: 'baz', variables: {}});
+
+$in({'/src/{dirName}/test': 'js'}).get('/src/dict/test').returns({value: 'js', variables: {dirName: 'dict'}});
+
+$in({
+  'home': 'home',
+  '/foo': '/bar',
+  '{name}_surname': 'do',
+  'hello * world': 'works'
 })
+  .get('home').returns({value: 'home', variables: {}})
+  .get('hello funny world').returns({value: 'works', variables: {}})
+  .get('/foo').returns({value: '/bar', variables: {}})
+  .get('test_surname').returns({value: 'do', variables: {name: 'test'}});
 
-test('Should get key with "catch all" symbol', () => {
-  const d = Dict({'/foo/*/bar': 'baz'})
+$in({'/users/{id}/{action}/{priority}': 'result'})
+  .get('/users/@id/@action/@priority').returns({value: 'result', variables: {id: '@id', action: '@action', priority: '@priority'}});
 
-  expect(d.get('/foo/wow/bar')).toEqual({value: 'baz', variables: {}})
+$in({
+  '/users': 'users',
+  '/users/*/edit': 'edit',
+  '/users/{userId}': 'aUser',
 })
+  .get('/users/1').returns({value: 'aUser', variables: {userId: '1'}})
+  .get('/users/1/edit').returns({value: 'edit', variables: {}});
 
-test('Should get key with named arguments and return variables', () => {
-  const d = Dict({'/src/{dirName}/test': 'js'})
-
-  expect(d.get('/src/dict/test')).toEqual({value: 'js', variables: {dirName: 'dict'}})
+$in({
+  'ho\\ho\\ho': 'ho',
+  'wow.such.dot': 'doge',
+  'works+with+plus': 'plus',
+  'works-with-minus': 'minus',
+  '[works][]with[][brackets]': '[brackets]',
+  '(works)()with()(brackets)': '(brackets)',
+  '?what is it?': 'test',
+  '^ lift me up ^': 'lift me up',
+  '$money$money$money$': 'must be funny',
+  'yes|no': 'I don\'t know',
 })
-
-test('Should get key when keys are mixed', () => {
-  const d = Dict({
-    'home': 'home',
-    '/foo': '/bar',
-    '{name}_surname': 'do',
-    'hello * world': 'works'
-  })
-
-  expect(d.get('home')).toEqual({value: 'home', variables: {}})
-  expect(d.get('hello funny world')).toEqual({value: 'works', variables: {}})
-  expect(d.get('/foo')).toEqual({value: '/bar', variables: {}})
-  expect(d.get('test_surname')).toEqual({value: 'do', variables: {name: 'test'}})
-})
-
-test('Should get key with many variables', () => {
-  const d = Dict({'/users/{id}/{action}/{priority}': 'result'})
-
-  expect(d.get('/users/@id/@action/@priority')).toEqual({value: 'result', variables: {
-    id: '@id', action: '@action', priority: '@priority'
-  }})
-})
-
-test('Should get two different keys with same start', () => {
-  const d = Dict({
-    '/users': 'users',
-    '/users/*/edit': 'edit',
-    '/users/{userId}': 'aUser',
-  })
-
-  expect(d.get('/users/1')).toEqual({value: 'aUser', variables: {userId: '1'}})
-  expect(d.get('/users/1/edit')).toEqual({value: 'edit', variables: {}})
-})
-
-test('Should work with regex literals', () => {
-  const d = Dict({
-    'ho\\ho\\ho': 'ho',
-    'wow.such.dot': 'doge',
-    'works+with+plus': 'plus',
-    'works-with-minus': 'minus',
-    '[works][]with[][brackets]': '[brackets]',
-    '(works)()with()(brackets)': '(brackets)',
-    '?what is it?': 'test',
-    '^ lift me up ^': 'lift me up',
-    '$money$money$money$': 'must be funny',
-    'yes|no': 'I don\'t know',
-  })
-
-  expect(d.get('ho\\ho\\ho')).toEqual({value: 'ho', variables: {}})
-  expect(d.get('wow.such.dot')).toEqual({value: 'doge', variables: {}})
-  expect(d.get('works+with+plus')).toEqual({value: 'plus', variables: {}})
-  expect(d.get('[works][]with[][brackets]')).toEqual({value: '[brackets]', variables: {}})
-  expect(d.get('(works)()with()(brackets)')).toEqual({value: '(brackets)', variables: {}})
-  expect(d.get('?what is it?')).toEqual({value: 'test', variables: {}})
-  expect(d.get('^ lift me up ^')).toEqual({value: 'lift me up', variables: {}})
-  expect(d.get('$money$money$money$')).toEqual({value: 'must be funny', variables: {}})
-  expect(d.get('yes|no')).toEqual({value: 'I don\'t know', variables: {}})
-})
-
-test('Should return undefined on unknown key', () => {
-  expect(Dict({'bar': 'foo'}).get('foo')).toEqual({value: undefined, variables: {}})
-})
+  .get('ho\\ho\\ho').returns({value: 'ho', variables: {}})
+  .get('wow.such.dot').returns({value: 'doge', variables: {}})
+  .get('works+with+plus').returns({value: 'plus', variables: {}})
+  .get('[works][]with[][brackets]').returns({value: '[brackets]', variables: {}})
+  .get('(works)()with()(brackets)').returns({value: '(brackets)', variables: {}})
+  .get('?what is it?').returns({value: 'test', variables: {}})
+  .get('^ lift me up ^').returns({value: 'lift me up', variables: {}})
+  .get('$money$money$money$').returns({value: 'must be funny', variables: {}})
+  .get('yes|no').returns({value: 'I don\'t know', variables: {}});
