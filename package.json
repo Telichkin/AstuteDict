@@ -1,6 +1,6 @@
 {
   "name": "astute-dict",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Small and simple basis for your own js router",
   "module": "./lib/AstuteDict.js",
   "main": "./lib/AstuteDict.js",
