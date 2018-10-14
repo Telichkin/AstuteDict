@@ -57,7 +57,7 @@ const rightRoutes = Dict({
 });
 
 const admin = rightRoutes.get('user-admin');
-console.log(admin); // { value: 'admin', variables: {} }
+console.log(admin); // { value: 'admin', variables: {} } }
 
 const anon = rightRoutes.get('user-anon');
 console.log(anon); // { value: 'role', variables: { role: 'anon' } }
@@ -65,7 +65,7 @@ console.log(anon); // { value: 'role', variables: { role: 'anon' } }
 
 const wrongRoutes = Dict({
   'user-{role}': 'role',
-  'user-admin': 'admin', // never will be available
+  'user-admin': 'admin', // not available
 });
 
 const notAdmin = wrongRoutes.get('user-admin');
